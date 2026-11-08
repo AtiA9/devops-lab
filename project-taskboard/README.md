@@ -12,3 +12,10 @@
 - `GET /health`
 - `GET /tasks`, `POST /tasks {"title": "..."}`
 - `PATCH /tasks/<id> {"done": true}`, `DELETE /tasks/<id>`
+- `GET /metrics` (Prometheus)
+
+## תפעול
+- [SLO ותקציב שגיאות](docs/SLO.md)
+- [Runbook ל-HighErrorRate](docs/RUNBOOK.md)
+- [Postmortem לדוגמה](docs/POSTMORTEM.md)
+- [ממצאי אבטחה](SECURITY.md)
