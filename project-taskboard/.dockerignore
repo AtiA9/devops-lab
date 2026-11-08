@@ -1,0 +1,13 @@
+.git
+__pycache__
+*.pyc
+*.db
+.venv
+venv
+.pytest_cache
+tests
+terraform
+k8s
+observability
+docs
+*.md
