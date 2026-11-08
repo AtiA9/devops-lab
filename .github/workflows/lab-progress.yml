@@ -1,0 +1,20 @@
+# The lab's own workflow: shows your progress on every push (Actions tab > Summary).
+# It never fails your build. Your own pipelines go in other files in this folder.
+name: lab-progress
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  progress:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-lab.txt
+      - run: python3 lab.py --summary >> "$GITHUB_STEP_SUMMARY"

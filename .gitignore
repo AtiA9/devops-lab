@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.db
+.pytest_cache/
+# terraform (stage 5)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars

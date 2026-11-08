@@ -1,0 +1,5 @@
+# What lab.py needs to run every check (the app's own requirements included)
+-r project-taskboard/requirements-dev.txt
+pyyaml==6.0.2
+bandit==1.7.10
+prometheus-client==0.21.0
