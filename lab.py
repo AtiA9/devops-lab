@@ -251,16 +251,26 @@ def s1_systemd():
 CONVENTIONAL = re.compile(r"^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([\w./-]+\))?!?: \S")
 
 
+# Lab maintenance is not your work: commits with the scope (lab), and merges of the lab's own update branches.
+LAB_COMMIT = re.compile(r"^\w+\(lab\)!?: ")
+LAB_MERGE = re.compile(r"claude/")
+
+
 def lab_range():
+    """Your commits: everything after the lab's first commit (or the lab-start tag, if it exists)."""
     rc, _ = git("rev-parse", "-q", "--verify", "refs/tags/lab-start")
-    return "lab-start..HEAD" if rc == 0 else "HEAD"
+    if rc == 0:
+        return "lab-start..HEAD"
+    rc, out = git("rev-list", "--max-parents=0", "HEAD")
+    roots = out.split()
+    return "%s..HEAD" % roots[-1] if rc == 0 and roots else "HEAD"
 
 
 def s2_commits():
     rc, out = git("log", lab_range(), "--no-merges", "--format=%s")
     if rc != 0:
         return FAIL, "not a git repository? " + out.strip()[:100]
-    subjects = [s for s in out.splitlines() if s.strip()]
+    subjects = [s for s in out.splitlines() if s.strip() and not LAB_COMMIT.match(s)]
     if len(subjects) < 3:
         return FAIL, "make at least 3 commits of your own (found %d)" % len(subjects)
     bad = [s for s in subjects if not CONVENTIONAL.match(s)]
@@ -271,7 +281,7 @@ def s2_commits():
 
 def s2_merges():
     rc, out = git("log", lab_range(), "--merges", "--format=%s")
-    merges = [s for s in out.splitlines() if s.strip()]
+    merges = [s for s in out.splitlines() if s.strip() and not LAB_MERGE.search(s)]
     if len(merges) < 3:
         return FAIL, "merge at least 3 branches through Pull Requests with 'Create a merge commit' (found %d merges, then git pull)" % len(merges)
     return PASS, "%d merges" % len(merges)
