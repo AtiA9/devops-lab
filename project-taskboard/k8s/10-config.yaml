@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: taskboard-config
+  namespace: taskboard
+data:
+  LOG_LEVEL: info
+  DB_PATH: /data/taskboard.db
+---
+# A placeholder value. Never commit a real secret - create it with:
+#   kubectl -n taskboard create secret generic taskboard-secret --from-literal=SECRET_KEY=...
+apiVersion: v1
+kind: Secret
+metadata:
+  name: taskboard-secret
+  namespace: taskboard
+type: Opaque
+stringData:
+  SECRET_KEY: replace-me

@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskboard
+  namespace: taskboard
+  labels:
+    app: taskboard
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: taskboard
+  template:
+    metadata:
+      labels:
+        app: taskboard
+    spec:
+      containers:
+        - name: taskboard
+          # the exact image the pipeline pushed (stage 4): ghcr.io/<owner>/taskboard:<commit sha>
+          image: ghcr.io/atia9/taskboard:3f2a1c9
+          ports:
+            - containerPort: 5000
+          envFrom:
+            - configMapRef:
+                name: taskboard-config
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: taskboard-secret
+                  key: SECRET_KEY
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        # each replica gets its own empty SQLite file - see NOTES.md (SQLite vs. replicas)
+        - name: data
+          emptyDir: {}
