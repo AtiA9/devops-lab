@@ -1,0 +1,9 @@
+# Stage 1 - runs the health check once; the timer starts it every 5 minutes.
+# Install: sudo cp health-check.service health-check.timer /etc/systemd/system/
+#          sudo systemctl daemon-reload && sudo systemctl enable --now health-check.timer
+[Unit]
+Description=TaskBoard health check
+
+[Service]
+Type=oneshot
+ExecStart=/home/user/devops-lab/health-check-monitor/health-check.sh http://localhost:5000/health
