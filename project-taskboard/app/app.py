@@ -5,12 +5,16 @@ how it works; you package it (Docker), test and ship it (CI/CD), run it (AWS, Ku
 watch it (Prometheus) and secure it (DevSecOps).
 """
 import os
+import secrets
 import sqlite3
+import time
 
 from flask import Flask, g, jsonify, request
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "taskboard-dev-secret-123"  # TODO (stage 8): a secret in code
+# stage 8: the secret comes from the environment (a random one if it is not set)
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 DB_PATH = os.environ.get("DB_PATH", "taskboard.db")
 
 
@@ -31,6 +35,30 @@ def close_db(_exc):
     db = g.pop("db", None)
     if db is not None:
         db.close()
+
+
+# stage 7: request count by endpoint and status, and response time (p95/p99)
+REQUESTS = Counter("http_requests_total", "HTTP requests", ["method", "endpoint", "status"])
+LATENCY = Histogram("http_request_duration_seconds", "HTTP request duration", ["endpoint"])
+
+
+@app.before_request
+def start_timer():
+    g.start = time.perf_counter()
+
+
+@app.after_request
+def record_metrics(response):
+    endpoint = request.url_rule.rule if request.url_rule else "unknown"
+    if endpoint != "/metrics":
+        REQUESTS.labels(request.method, endpoint, str(response.status_code)).inc()
+        LATENCY.labels(endpoint).observe(time.perf_counter() - g.get("start", time.perf_counter()))
+    return response
+
+
+@app.get("/metrics")
+def metrics():
+    return generate_latest(), 200, {"Content-Type": CONTENT_TYPE_LATEST}
 
 
 def to_dict(row):
@@ -88,4 +116,5 @@ def delete_task(task_id):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)  # TODO (stage 8): debug mode in production
+    # stage 8: no debug mode; for local runs only - the container uses gunicorn
+    app.run(host="127.0.0.1", port=5000)

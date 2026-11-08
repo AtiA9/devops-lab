@@ -1,0 +1,14 @@
+# Stage 7 - fires when more than 5% of the requests fail with 5xx for 5 minutes
+groups:
+  - name: taskboard
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m]))
+            / sum(rate(http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: "TaskBoard: more than 5% of requests fail with 5xx"
+          runbook: "project-taskboard/docs/RUNBOOK.md"
