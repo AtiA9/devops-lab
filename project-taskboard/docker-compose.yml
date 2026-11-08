@@ -1,0 +1,36 @@
+# Stage 3: the API with a volume for its database. Stage 7 adds Prometheus and Grafana.
+services:
+  taskboard:
+    build: .
+    image: taskboard:local
+    ports:
+      - "5000:5000"
+    environment:
+      DB_PATH: /data/taskboard.db
+      SECRET_KEY: ${SECRET_KEY:-local-dev-only}
+    volumes:
+      - taskboard-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/alerts.yml:/etc/prometheus/alerts.yml:ro
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+volumes:
+  taskboard-data:
