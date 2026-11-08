@@ -1,0 +1,4 @@
+# copy to terraform.tfvars (it is in .gitignore) and fill in:
+image      = "ghcr.io/atia9/taskboard:<commit sha>"
+my_ip_cidr = "1.2.3.4/32"
+key_name   = "my-key"
